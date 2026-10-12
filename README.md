@@ -1,25 +1,54 @@
-# Revenue-Dip-Lab
+<div align="center">
+
+# 📉 Revenue Dip Lab
+
+**Fundamental resilience & price-drawdown backtesting engine**
+
+<sub>Do companies with resilient revenue offer systematic opportunities when their stock prices fall sharply?</sub>
+
+<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" height="26">
+<img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" height="26">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" height="26">
+<img src="https://img.shields.io/badge/Web%20Workers-1F2937?style=for-the-badge" height="26">
+<img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" height="26">
+<img src="https://img.shields.io/badge/SEC%20EDGAR-1F2937?style=for-the-badge" height="26">
+<img src="https://img.shields.io/badge/Yahoo%20Finance-6001D2?style=for-the-badge&logo=yahoo&logoColor=white" height="26">
+<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" height="26">
+
+<sub><b>Program</b> Signals to Alpha &nbsp;·&nbsp; <b>Discipline</b> Quantitative equity research &nbsp;·&nbsp; <b>Methods</b> fundamental screening · drawdown signals · historical backtesting · performance attribution</sub>
+
+[Overview](#-overview) · [Features](#-key-features) · [Strategy](#%EF%B8%8F-strategy-rules) · [Data](#%EF%B8%8F-data-sources) · [Getting Started](#-getting-started) · [Structure](#%EF%B8%8F-project-structure) · [API](#-api) · [Notes](#-notes--limitations)
+
+</div>
+
+---
+
+## 📌 Overview
 
 A five-panel backtesting workspace for stable revenue growth and price declines. FastAPI serves the application and its data APIs. A shared JavaScript engine executes identically in the browser and through the API.
 
-## Start locally
+Revenue Dip Lab tests equity strategies built on the **divergence between market prices and corporate fundamentals**: it combines **revenue consistency** with **configurable price-drawdown signals**, then replays every trade on a shared clock so the result can be inspected, not just reported.
 
-Requirements: **Python 3.10+**, **Node.js 22+**.
+| | Hypothesis |
+|---|---|
+| **H₀** | Buying companies with resilient revenue after substantial price declines does **not** generate statistically significant risk-adjusted excess returns. |
+| **H₁** | Companies with stable or consistently growing revenue experience temporary price dislocations followed by positive subsequent returns. |
 
-- Windows: run `start.bat`.
-- macOS/Linux: run `sh start.sh`.
-- Open **http://localhost:8000**.
+> **Model type.** A deterministic, rule-based strategy — not a machine-learning prediction model. Parameter sweeps study sensitivity; they do not fit a model.
 
-The startup scripts create `.venv` and install the Python requirements. First launch requires an internet connection. Manual startup:
+## ✨ Key Features
 
-```bash
-pip install -r requirements.txt
-python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
-```
+| Feature | Description |
+|---|---|
+| 🧭 **Five-panel workspace** | Strategy · Results · Price signals · CAGR surface · Factor search |
+| 🎬 **Replayable backtests** | Equity curve and price charts draw on one clock; buy / sell markers appear as their dates pass |
+| 🗻 **CAGR surface sweep** | Any two parameters, up to 20,000 backtests, rendered as a rotatable 3D surface |
+| 🔬 **Factor search** | All six parameters with an out-of-sample split, η² sensitivity and in- vs out-of-sample Spearman ρ |
+| 🗄️ **Real & synthetic data** | Yahoo Finance + SEC EDGAR cached in SQLite, optional FMP connector, JSON import, labeled synthetic demo |
 
-API documentation: http://localhost:8000/docs
+> **Finding.** On the real 2022–2025 data, 5,000 parameter combinations gave an in- vs out-of-sample CAGR rank correlation of **ρ = −0.56** — the in-sample optimum does not survive out of sample.
 
-## Five-panel workflow
+### Five-panel workflow
 
 1. **Strategy:** choose the universe, date range, starting capital, revenue stability tolerance, minimum annual growth, entry decline, base order, extra order amount per percentage point, take-profit target, maximum holding months and one-way costs.
 2. **Results:** inspect net return, CAGR, maximum drawdown, win rate, equity curve, trades, screening candidates, open positions and execution protocol. Export trades as CSV or the dataset as JSON.
@@ -33,7 +62,9 @@ Each run replays the backtest: the equity curve and every price chart draw from 
 
 The default synthetic dataset is loaded on startup and clearly labeled. It is not actual market data and does not establish strategy performance. A manual **RUN BACKTEST** highlights the Results panel. Editing parameters does not silently change the previous results; run again to apply them.
 
-## Strategy and fills
+## ⚙️ Strategy Rules
+
+### Strategy and fills
 
 - Rank the supplied universe by market cap, select the top N (maximum 200), then apply the revenue filter. Missing revenue does not cause substitution with a lower-ranked security.
 - Four consecutive annual revenue values produce three YoY growth rates. The default tolerance is `max(growth) - min(growth) <= 5 percentage points`, with every rate at least 0%. Both are adjustable.
@@ -50,7 +81,7 @@ The default synthetic dataset is loaded on startup and clearly labeled. It is no
 - Portfolio return, CAGR and drawdown include uninvested cash and unrealized gains/losses.
 - Cash dividends, taxes, FX, trading halts, delisting settlements, liquidity and market impact are not modeled. Supply split-adjusted, cash-dividend-unadjusted open/close prices in a consistent currency.
 
-## Three-year chart windows
+### Three-year chart windows
 
 Default test period: **2023-01-01 through 2025-12-31**.
 
@@ -58,7 +89,9 @@ Charts normally show the final 36 calendar months ending on the test end date. I
 
 Entered symbols appear in entry-date order. Non-entered symbols follow in ticker order. The full view includes every symbol that belonged to a valid top-N snapshot during the test, so historical membership changes can produce more than N cards. Use **Entered symbols only** to narrow the display.
 
-## Real market data (2022–2025): Yahoo Finance + SEC, cached in SQLite
+## 🗄️ Data Sources
+
+### Real market data (2022–2025): Yahoo Finance + SEC, cached in SQLite
 
 Select **Real data 2022–25** (local server only). The first time, the server builds `data/market.sqlite` (about 5 minutes); afterwards every load reads the database and backtests run in the page. Build ahead of time from the command line:
 
@@ -74,7 +107,7 @@ python -m backend.realdata --check  # what the database holds
 - Tables: `prices`, `splits`, `financials`, `shares`, `universe` (weekly top 200), `companies`, `meta`. The server serves a gzip-compressed columnar export (`GET /api/data/real`), cached next to the database and rebuilt only when it changes.
 - Set `SEC_USER_AGENT="Your Name you@example.com"` to identify your client to SEC, as SEC requests for automated access.
 
-## Market data through FMP
+### Market data through FMP
 
 Set your API key in the server environment before launch:
 
@@ -103,7 +136,7 @@ Official documentation: https://site.financialmodelingprep.com/developer/docs
 
 Live collection has not been tested with a user API key. Validate provider permissions, adjustments and completeness before interpreting real-data results.
 
-## Import JSON
+### Import JSON
 
 ```json
 {
@@ -130,7 +163,61 @@ For restatements, preserve original publication dates and historically known val
 
 The program cannot verify rankings outside your supplied universe or the truth of publication dates.
 
-## Project structure
+## 🧰 Tech Stack
+
+| Layer | Tools |
+|---|---|
+| Backend | Python, FastAPI, Uvicorn |
+| Engine | Shared JavaScript backtest engine — identical in the browser and through the API (Node.js runner) |
+| Frontend | Browser JavaScript, Web Workers, interactive charts and 3D surface |
+| Data | SEC EDGAR companyfacts, Yahoo Finance (`yfinance`), Financial Modeling Prep (optional), SQLite, JSON import, synthetic generator |
+| Ops & tests | Docker, Node regression tests, Python real-data test |
+
+## 🚀 Getting Started
+
+Requirements: **Python 3.10+**, **Node.js 22+**.
+
+- Windows: run `start.bat`.
+- macOS/Linux: run `sh start.sh`.
+- Open **http://localhost:8000**.
+
+The startup scripts create `.venv` and install the Python requirements. First launch requires an internet connection. Manual startup:
+
+```bash
+pip install -r requirements.txt
+python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
+```
+
+API documentation: http://localhost:8000/docs
+
+### Docker
+
+```bash
+docker build -t revenue-dip-lab .
+docker run --rm -p 127.0.0.1:8000:8000 -e FMP_API_KEY revenue-dip-lab
+```
+
+### Verification
+
+```bash
+node tests/engine.cjs
+node tests/config-and-charts.cjs
+node tests/navigation.cjs
+node tests/sweep.cjs
+node tests/factors.cjs
+python tests/realdata_test.py
+```
+
+## 🗂️ Project Structure
+
+```text
+Revenue-Dip-Lab
+├── backend/      app.py · realdata.py · runner.cjs
+├── dist/         engine · app · navigation · playback · sweep · factors · stock-charts · index.html · style.css
+├── tests/        deterministic regression tests
+├── Dockerfile · .dockerignore · .env.example · requirements.txt
+└── start.bat · start.sh
+```
 
 - `backend/app.py`: FastAPI routes, FMP collection, static server and project ZIP download.
 - `backend/realdata.py`: yfinance + SEC EDGAR collector, SQLite schema and compact export.
@@ -150,23 +237,19 @@ The program cannot verify rankings outside your supplied universe or the truth o
 
 The hosted site runs browser calculations and accepts JSON uploads. It does not run FastAPI. FMP collection is available through the included local FastAPI server. The local API has no authentication: add authentication and request-size limits before exposing it publicly.
 
-## Docker
-
-```bash
-docker build -t revenue-dip-lab .
-docker run --rm -p 127.0.0.1:8000:8000 -e FMP_API_KEY revenue-dip-lab
-```
-
-## Verification
-
-```bash
-node tests/engine.cjs
-node tests/config-and-charts.cjs
-node tests/navigation.cjs
-node tests/sweep.cjs
-node tests/factors.cjs
-python tests/realdata_test.py
-```
+## 📡 API
 
 `POST /api/backtest`: `{"data": <dataset>, "config": {"start":"2023-01-01","end":"2025-12-31"}}`.
 Other routes: `GET /api/data/real`, `GET /api/data/real/status`, `POST /api/data/real/build`, `GET /api/health`, `POST /api/data/fmp`, `GET /api/data/jobs/{job}`, `GET /revenue-dip-lab.zip`.
+
+## 📝 Notes & Limitations
+
+- **Synthetic ≠ evidence.** The default synthetic dataset only exercises the interface; it does not establish strategy performance.
+- **Survivorship bias.** The real-data universe is today's S&P 500 constituents re-ranked weekly; companies that left the index are missing.
+- **Look-ahead.** Revenue uses SEC original filing dates; the FMP path can include restatements and is not guaranteed point-in-time.
+- **Not modeled:** cash dividends, taxes, FX, halts, delisting settlements, liquidity and market impact.
+- Any claim of alpha needs benchmark comparison, risk adjustment and statistical validation. Research and educational use only — not investment advice.
+
+---
+
+<div align="center"><sub>Built by <a href="https://github.com/HyeonbinJung">Hyeonbin Jung</a> · part of <a href="https://github.com/HyeonbinJung/Signals-to-Alpha">Signals to Alpha</a></sub></div>

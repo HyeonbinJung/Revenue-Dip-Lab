@@ -1,0 +1,1 @@
+const {run}=require('../dist/engine.js');let s='';process.stdin.setEncoding('utf8');process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{try{let p=JSON.parse(s);process.stdout.write(JSON.stringify(run(p.data,p.config)))}catch(e){process.stderr.write(e.message);process.exitCode=1}});

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0b0b">
+  <title>Revenue Dip Lab / Research Terminal</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="engine.js"></script>
+  <script defer src="playback.js"></script>
+  <script defer src="stock-charts.js"></script>
+  <script defer src="sweep.js"></script>
+  <script defer src="factors.js"></script>
+  <script defer src="navigation.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#strategy" aria-label="Revenue Dip Lab"><span class="brand-symbol">R/D</span><span>REVENUE DIP <b>LAB</b><small>QUANTITATIVE RESEARCH TERMINAL</small></span></a>
+  <div class="playback" id="playback" aria-label="Backtest playback">
+    <button class="play-button" id="replay" title="Replay the backtest from its first date" disabled><span aria-hidden="true">⟲</span> REPLAY</button>
+    <div class="play-track"><div class="play-meta"><span class="micro-label">PLAYBACK</span><b id="playDate">—</b></div><div class="play-bar"><i id="playFill"></i></div></div>
+    <button class="play-button" id="skip" title="Show the full result immediately" disabled>SKIP <span aria-hidden="true">⏭</span></button>
+  </div>
+  <div class="top-actions"><button class="text-button" id="resetLayout" title="Restore the default panel order and widths">RESET LAYOUT</button><a class="source-link" href="revenue-dip-lab.zip" download>PROJECT .ZIP <span>↓</span></a></div>
+</header>
+<main id="workspace" aria-label="Five-panel research workspace">
+<section class="panel" id="strategy" data-panel="strategy" aria-labelledby="strategy-title">
+  <div class="panel-heading" data-drag-zone>
+    <button class="grip" aria-label="Move Strategy panel. Use arrow keys to reorder." title="Drag to reorder">⠿</button>
+    <div class="panel-title"><div class="eyebrow">01 / STRATEGY ENGINE</div><h1 id="strategy-title">Strategy<span class="title-dot">.</span></h1></div>
+    <div class="panel-tools"><button class="icon-button maximize" aria-label="Maximize Strategy panel" title="Maximize / restore">⤢</button></div>
+  </div>
+  <div class="panel-body">
+    <div class="dataBar"><div class="data-source"><span class="micro-label">DATA SOURCE</span><b id="dataTitle">Initialize dataset</b><small id="dataInfo">Load a synthetic dataset or import market data.</small></div><span class="badge" id="mode">AWAITING DATA</span><div class="actions"><button class="secondary" id="demo" title="Reproducible synthetic dataset">Load demo</button><button class="secondary real-button" id="realData" title="2022–2025 backtest on Yahoo Finance prices and SEC 10-K revenue, cached in local SQLite">Real data 2022–25</button><label class="upload">Import JSON<input id="upload" type="file" accept=".json,application/json" hidden></label><button class="secondary" id="fetch">Connect FMP</button></div></div>
+    <form id="settings">
+      <div class="config-grid">
+        <fieldset class="config-card"><legend><span>01</span> UNIVERSE</legend><label>Market-cap universe<select name="top"><option value="200">Top 200 US equities</option><option value="100">Top 100 US equities</option><option value="50">Top 50 US equities</option></select></label><div class="pair"><label>Start date<input name="start" type="date" value="2023-01-01" required></label><label>End date<input name="end" type="date" value="2025-12-31" required></label></div><label>Starting capital <span>USD</span><input name="capital" type="number" value="1000000" min="1" required></label><div class="card-note">Cash-funded portfolio. One entry per symbol. No leverage.</div></fieldset>
+        <fieldset class="config-card"><legend><span>02</span> REVENUE FILTER</legend><div class="pair"><label>Growth tolerance <span>pp</span><input name="spread" type="number" value="5" min="0" step="0.1" required></label><label>Min. annual growth <span>%</span><input name="minGrowth" type="number" value="0" step="0.1" required></label></div><div class="rule-display"><span>STABILITY CONDITION</span><code>MAX(g₁, g₂, g₃) − MIN(g₁, g₂, g₃) ≤ δ</code></div><div class="card-note">Three consecutive YoY rates from four reported annual revenue values.</div></fieldset>
+        <fieldset class="config-card"><legend><span>03</span> EXECUTION</legend><div class="pair"><label>Entry decline <span>%</span><input name="drop" type="number" value="10" min="0.1" max="99" step="0.1" required></label><label>Take profit <span>%</span><input name="target" type="number" value="10" min="0.1" step="0.1" required></label></div><div class="pair"><label>Base order <span>USD</span><input name="base" type="number" value="10000" min="1" required></label><label>Add per 1% <span>USD</span><input name="extra" type="number" value="1000" min="0" required></label></div><div class="pair"><label>Max holding <span>months</span><input name="hold" type="number" value="3" min="1" max="120" required></label><label>One-way costs <span>bps</span><input name="costBps" type="number" value="10" min="0" max="999" required></label></div><div class="card-note">30-calendar-day decline. Close signal → next-session open.</div></fieldset>
+      </div>
+      <div class="execute-bar"><div><span class="micro-label">ORDER SIZING / LIVE PARAMETERS</span><div class="formula" id="formula"></div></div><div class="run-group"><button id="run" class="run-button" type="submit"><span class="run-icon">▶</span> RUN BACKTEST</button><button class="all-button" type="button" data-sweep-run title="Backtest every pair of the two parameters chosen in the CAGR surface panel">▦ ALL BACKTEST <small class="sweep-count">600</small></button></div></div>
+    </form>
+  </div>
+</section>
+<div class="gutter" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize panels. Use left and right arrow keys."></div>
+<section class="panel" id="results" data-panel="results" aria-labelledby="results-title">
+  <div class="panel-heading" data-drag-zone>
+    <button class="grip" aria-label="Move Results panel. Use arrow keys to reorder." title="Drag to reorder">⠿</button>
+    <div class="panel-title"><div class="eyebrow">02 / PERFORMANCE ANALYSIS</div><h1 id="results-title">Results<span class="title-dot">.</span></h1></div>
+    <div class="panel-tools"><button class="icon-button maximize" aria-label="Maximize Results panel" title="Maximize / restore">⤢</button></div>
+  </div>
+  <div class="panel-body">
+    <div id="appliedConfig" class="applied-config" hidden></div>
+    <div class="metrics" id="metrics"><article><span>NET RETURN</span><strong>—</strong></article><article><span>CAGR</span><strong>—</strong></article><article><span>MAX DRAWDOWN</span><strong>—</strong></article><article><span>WIN RATE / CLOSED</span><strong>—</strong></article></div>
+    <div class="results-grid">
+      <div class="chartbox"><div class="charthead"><div><div class="micro-label">PORTFOLIO EQUITY / USD</div><h3 id="equityValue">Awaiting simulation</h3></div><div class="legend"><i></i>Equity<span>Initial capital ┄</span></div></div><div id="chart" class="chart"><div class="empty">Run a backtest to plot portfolio equity.</div></div><div class="chartfooter"><span id="range">—</span><span id="exposure">—</span></div></div>
+      <div class="tablebox"><div class="tabs" role="tablist" aria-label="Result tables"><button data-tab="trades" class="active" role="tab" aria-selected="true">Trades</button><button data-tab="screen" role="tab" aria-selected="false">Screen</button><button data-tab="open" role="tab" aria-selected="false">Holdings</button><button data-tab="rules" role="tab" aria-selected="false">Protocol</button><button class="export" id="export" disabled>CSV ↓</button></div><div id="table" tabindex="0" aria-label="Backtest result details"><div class="empty">No simulation results.</div></div></div>
+    </div>
+  </div>
+</section>
+<div class="gutter" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize panels. Use left and right arrow keys."></div>
+<section class="panel" id="signals" data-panel="signals" aria-labelledby="signals-title">
+  <div class="panel-heading" data-drag-zone>
+    <button class="grip" aria-label="Move Price signals panel. Use arrow keys to reorder." title="Drag to reorder">⠿</button>
+    <div class="panel-title"><div class="eyebrow">03 / TRADE REPLAY</div><h1 id="signals-title">Price signals<span class="title-dot">.</span></h1></div>
+    <div class="panel-tools"><select id="stockFilter" aria-label="Symbols to show"><option value="all">All symbols</option><option value="entered">Entered only</option></select><button class="icon-button maximize" aria-label="Maximize Price signals panel" title="Maximize / restore">⤢</button></div>
+  </div>
+  <div class="panel-body signals-body" id="signalsScroll" tabindex="0" aria-label="Scroll through symbol charts">
+    <div id="signalsEmpty" class="empty">Run a backtest to inspect three-year price histories.</div>
+    <section id="stockSection" class="stock-section" aria-label="Three-year symbol charts" hidden>
+      <div class="signal-toolbar"><p id="stockSummary"></p><div class="stock-legend"><span><i class="line-key"></i>Close</span><span><i class="buy-key"></i>Buy</span><span><i class="sell-key"></i>Sell</span></div></div>
+      <p class="chart-note">36-month windows, sorted by entry date. Markers show execution prices at the open. Click a chart to enlarge it.</p>
+      <div id="stockCharts"></div><div id="stockProgress" class="hint" role="status"></div>
+    </section>
+  </div>
+</section>
+<div class="gutter" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize panels. Use left and right arrow keys."></div>
+<section class="panel" id="sweep" data-panel="sweep" aria-labelledby="sweep-title">
+  <div class="panel-heading" data-drag-zone>
+    <button class="grip" aria-label="Move CAGR surface panel. Use arrow keys to reorder." title="Drag to reorder">⠿</button>
+    <div class="panel-title"><div class="eyebrow">04 / PARAMETER SWEEP</div><h1 id="sweep-title">CAGR surface.</h1></div>
+    <div class="panel-tools"><button class="icon-button maximize" aria-label="Maximize CAGR surface panel" title="Maximize / restore">⤢</button></div>
+  </div>
+  <div class="panel-body sweep-body">
+    <div class="sweep-config"><div class="axis-row" id="sweepAxisX" role="group" aria-label="X axis"><span class="axis-name">X</span><select data-f="key" aria-label="X parameter"></select><label>FROM<input data-f="from" type="number" step="any"></label><label>TO<input data-f="to" type="number" step="any"></label><label>STEP<input data-f="step" type="number" step="any" min="0"></label><span class="axis-count"></span></div><div class="axis-row" id="sweepAxisY" role="group" aria-label="Y axis"><span class="axis-name">Y</span><select data-f="key" aria-label="Y parameter"></select><label>FROM<input data-f="from" type="number" step="any"></label><label>TO<input data-f="to" type="number" step="any"></label><label>STEP<input data-f="step" type="number" step="any" min="0"></label><span class="axis-count"></span></div><div class="sweep-bar"><p id="sweepSummary" class="sweep-summary"></p><div class="sweep-actions"><button class="secondary" id="sweepCancel" hidden>Cancel</button><button class="secondary" id="sweepExport" disabled>CSV ↓</button><button class="all-button" data-sweep-run>▦ ALL BACKTEST</button></div></div></div>
+    <div class="sweep-progress"><i id="sweepFill"></i></div>
+    <div class="sweep-stage"><canvas id="sweepCanvas" role="img" aria-label="3D surface of CAGR over the two chosen parameters. The top-10 table below lists the best combinations."></canvas><div id="sweepTip" class="sweep-tip" hidden></div><div id="sweepEmpty" class="sweep-empty"><span>Choose X and Y parameters and ranges, then run <b>ALL BACKTEST</b> to map CAGR across every pair.<br>Other parameters stay as set in Strategy.</span></div><span class="sweep-hint">DRAG ROTATE · WHEEL ZOOM · DBL-CLICK RESET · CLICK APPLY</span></div>
+    <div class="sweep-legend"><span class="micro-label">CAGR</span><span id="sweepMin">—</span><i class="ramp" id="sweepRamp" aria-hidden="true"></i><span id="sweepMax">—</span></div>
+    <div id="sweepResult" hidden><div id="sweepBest" class="sweep-best"></div><div class="micro-label sweep-table-title">TOP 10 · CLICK A ROW TO APPLY</div><div id="sweepTable" class="sweep-table"></div></div>
+  </div>
+</section>
+<div class="gutter" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize panels. Use left and right arrow keys."></div>
+<section class="panel" id="factors" data-panel="factors" aria-labelledby="factors-title">
+  <div class="panel-heading" data-drag-zone>
+    <button class="grip" aria-label="Move Factor search panel. Use arrow keys to reorder." title="Drag to reorder">⠿</button>
+    <div class="panel-title"><div class="eyebrow">05 / MULTI-FACTOR SEARCH</div><h1 id="factors-title">Factor search.</h1></div>
+    <div class="panel-tools"><button class="icon-button maximize" aria-label="Maximize Factor search panel" title="Maximize / restore">⤢</button></div>
+  </div>
+  <div class="panel-body factors-body">
+    <div id="factorConfig" class="factor-config">
+      <div id="factorRanges" class="factor-ranges"></div>
+      <div class="factor-options">
+        <label class="factor-opt"><input type="radio" name="factorMode" value="random" checked> RANDOM <input id="factorSamples" type="number" value="5000" min="10" max="100000" step="10" aria-label="Number of random samples"></label>
+        <label class="factor-opt"><input type="radio" name="factorMode" value="grid"> FULL GRID</label>
+        <label class="factor-opt"><input type="checkbox" id="factorSplit" checked> OUT-OF-SAMPLE FROM <input id="factorSplitDate" type="date" value="2024-01-01" aria-label="Out-of-sample start date"></label>
+      </div>
+    </div>
+    <div class="sweep-bar"><p id="factorSummary" class="sweep-summary"></p><div class="sweep-actions"><button class="secondary" id="factorCancel" hidden>Cancel</button><button class="secondary" id="factorExport" disabled>CSV ↓</button><button class="all-button" id="factorRun">▦ RUN FACTOR SEARCH</button></div></div>
+    <div class="sweep-progress"><i id="factorFill"></i></div>
+    <div id="factorEmpty" class="factor-empty">Set a range for each factor (from = to fixes it), then <b>RUN FACTOR SEARCH</b>.<br>Ranking uses the in-sample period; the out-of-sample period checks whether that ranking holds.</div>
+    <div id="factorResult" hidden>
+      <div class="factor-block"><div class="factor-head"><span class="micro-label">SENSITIVITY · SHARE OF CAGR VARIANCE EXPLAINED BY EACH FACTOR (η²)</span></div><div id="factorSens" class="factor-sens"></div></div>
+      <div class="factor-block"><div class="factor-head"><span class="micro-label">PARALLEL COORDINATES · ONE LINE PER COMBINATION · TOP 10% BY IN-SAMPLE CAGR IN COLOR</span></div><div class="factor-canvas tall"><canvas id="factorParallel" role="img" aria-label="Parallel coordinates of the six factors and CAGR"></canvas></div></div>
+      <div class="factor-block" id="factorOosBlock"><div class="factor-head"><span class="micro-label">IN-SAMPLE vs OUT-OF-SAMPLE CAGR · DASHED = EQUAL</span><span id="factorRho" class="factor-rho"></span></div><div class="factor-canvas"><canvas id="factorScatter" role="img" aria-label="Scatter of in-sample against out-of-sample CAGR"></canvas><div class="sweep-tip" id="factorScatterTip" hidden></div></div><p class="factor-note" id="factorOosNote"></p></div>
+      <div class="factor-block"><div class="factor-head"><span class="micro-label">PAIR MAP</span><select id="factorPairX" aria-label="Pair map X factor"></select><span class="micro-label">×</span><select id="factorPairY" aria-label="Pair map Y factor"></select><select id="factorAgg" aria-label="Aggregate over other factors"><option value="max">MAX</option><option value="median">MEDIAN</option></select></div><div class="factor-canvas"><canvas id="factorHeat" role="img" aria-label="Heat map of CAGR for two factors"></canvas><div class="sweep-tip" id="factorHeatTip" hidden></div></div><p class="factor-note" id="factorHeatLegend"></p></div>
+      <div class="factor-block"><div class="factor-head"><span class="micro-label">TOP 20 BY IN-SAMPLE CAGR · CLICK A ROW TO APPLY ALL SIX</span></div><div id="factorTable" class="sweep-table"></div></div>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="system-footer"><div class="system-state"><span class="system-light" aria-hidden="true"></span><span id="status" class="notice" role="status">Initializing research workspace…</span></div><span class="footer-hint">DRAG HEADERS TO REORDER / DRAG DIVIDERS TO RESIZE</span></footer>
+<dialog id="help"><div class="eyebrow">DATA CONNECTION</div><h2>Connect market data</h2><p>The hosted terminal runs backtests in your browser. Import a market-data JSON file, or run the included FastAPI server to collect data from FMP.</p><pre>pip install -r requirements.txt
+export FMP_API_KEY='your-api-key'
+python -m uvicorn backend.app:app --port 8000</pre><p><b>Real data 2022–25</b> also needs the local server: it builds <b>data/market.sqlite</b> once from Yahoo Finance prices and SEC EDGAR 10-K revenue (or run <b>python -m backend.realdata</b> beforehand), then reads it for every backtest.</p><p>Requires Python 3.10+ and Node.js 22+. Open <b>http://localhost:8000</b>, then select <b>Connect FMP</b>. Your API key stays on the server.</p><p>FMP uses the current top 200 US stocks. This introduces survivorship and look-ahead bias. Import historical universe snapshots for point-in-time screening.</p><div class="dialog-actions"><button id="template" class="secondary">JSON template</button><button id="closeHelp">Close</button></div></dialog>
+</body>
+</html>
